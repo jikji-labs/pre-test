@@ -1,0 +1,67 @@
+# Jikjicode 2026-07-20 pre-test example.
+# API 키 값은 넣지 말고 환경 변수 이름만 지정하십시오.
+runtime:
+  name: jikjicode
+  mode: development
+
+jikjicode:
+  mode: local
+  env_file: ~/env
+  sandbox: workspace-write
+  shell_sandbox: bubblewrap
+  theme: dark
+  approval: on-request
+  subagent_tools: inherit
+  tool_profile: full
+  compatibility_mode: claude-code
+  max_concurrent_agent: 4
+  max_depth_agent: 8
+  max_steps: 1024
+  stream: true
+  parallel_tools: true
+  rate_limit_resume: park
+  rate_limit_max_wait: 20m
+  orchestration: true
+
+typebackbone:
+  default_provider: zai-coding
+  default_model: glm-5.2
+  streaming:
+    first_event_timeout: 5m
+    read_idle_timeout: 5m
+  providers:
+    - name: zai-coding
+      kind: zai
+      usage_provider: zai
+      category: chat
+      model: glm-5.2
+      base_url: https://api.z.ai/api/coding/paas/v4
+      api_key_env: Z_AI_API_KEY
+      billing: subscription
+      timeout: 20m
+      context_window: 200000
+      max_output: 96000
+      max_steps: 1024
+      supports_tools: true
+      supports_streaming: true
+      supports_thinking: true
+      thinking_mode: reasoning_effort
+      reasoning_efforts: [high, max]
+      default_reasoning_effort: max
+
+    # 필요하면 default_provider/default_model을 바꾸어 사용합니다.
+    - name: ollama-cloud
+      kind: ollama-cloud
+      category: chat
+      model: kimi-k2.7-code:cloud
+      base_url: https://ollama.com
+      api_key_env: OLLAMA_API_KEY
+      timeout: 20m
+      context_window: 260000
+      max_output: 32000
+      supports_tools: true
+      supports_streaming: true
+      supports_thinking: true
+      thinking_mode: reasoning_effort
+      reasoning_efforts: [none, low, medium, high, max]
+      default_reasoning_effort: high
