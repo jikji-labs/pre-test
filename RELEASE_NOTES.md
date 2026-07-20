@@ -30,12 +30,24 @@
   SELECT-only 검증, tenant scoping, stacked statement 및 외부 작업 차단,
   DuckDB sandbox는 유지됩니다.
 
+## Self-update
+
+- `jikjicode update --check`, `jikjicode update`, `--version`, `--force`를
+  지원합니다.
+- 대화형 터미널은 최대 24시간에 한 번, 최대 5초의 비동기 확인을 수행합니다.
+  오프라인 오류는 기동을 막지 않으며 자동으로 바이너리를 설치하지 않습니다.
+- 현재 standard/full flavor와 OS/architecture가 일치하는 자산만 선택합니다.
+- `SHA256SUMS`를 엄격하게 파싱하고 declared/streamed 크기 제한과 SHA-256 검증을
+  통과한 파일만 동기화 후 원자 교체합니다.
+- `JIKJICODE_NO_UPDATE_CHECK=1`은 백그라운드 확인만 비활성화합니다.
+
 ## 검증
 
 - Jikji 전체 `make verify`
 - Jikjicode 관련 race detector
 - PostgreSQL 17 및 MySQL 8.4 임시 컨테이너를 사용한 실제 DuckDB connector 통합
 - 심볼릭 링크 및 비 Git 작업공간에서 실제 PTY TUI 기동
+- 실제 GitHub prerelease 조회를 사용한 `update --check`
 - Linux, macOS, Windows 테스트 교차 컴파일과 FreeBSD/OpenBSD portability build
 
 ## 포함 파일

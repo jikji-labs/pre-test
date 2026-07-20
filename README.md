@@ -50,6 +50,10 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 - `/duckdb`에서 connector 상태를 확인할 수 있으며, `/config sqlguard`의
   선택적 heuristic filter는 로컬 기본값이 `off`입니다. SELECT-only 검증,
   tenant scoping, stacked statement 차단과 DuckDB sandbox는 항상 유지됩니다.
+- 터미널 실행은 24시간마다 GitHub prerelease를 비동기로 확인하고 새 버전만
+  알립니다. 자동 설치하지 않으며 `jikjicode update`를 명시해야 합니다.
+- 업데이트는 현재 standard/full 빌드 종류와 OS/architecture가 일치하는 자산만
+  선택하고, 크기 제한과 `SHA256SUMS` 검증 후 같은 디렉터리에서 원자 교체합니다.
 
 - provider turn identity와 도구 실행 경계가 어긋났을 때 실행을 중단하는 대신,
   안전하게 수정 가능한 오류를 모델에 돌려주어 다음 동작에서 스스로 교정할 수
@@ -169,7 +173,14 @@ jikjicode doctor                  # 환경/설정/도구 진단
 jikjicode session list
 jikjicode session export <id> -o recovery.json
 jikjicode session import recovery.json
+jikjicode update --check
+jikjicode update
 ```
+
+업데이트 확인은 오프라인 기동을 막지 않으며 실패 시 조용히 다음 기회로
+넘어갑니다. air-gapped 또는 중앙 배포 환경에서는
+`JIKJICODE_NO_UPDATE_CHECK=1`로 백그라운드 확인을 끌 수 있습니다. 명시적인
+`jikjicode update` 명령은 계속 사용할 수 있습니다.
 
 주요 옵션:
 
