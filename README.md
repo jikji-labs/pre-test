@@ -18,6 +18,21 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 않습니다. Python 도구는 시스템에 `python3`가 설치된 경우 두 바이너리 모두 외부
 프로세스 방식으로 사용할 수 있습니다.
 
+### 테스트된 Provider
+
+이 스냅샷에서 실제 인증과 대화 경로를 확인한 provider는 다음과 같습니다.
+
+| Provider | 검증된 인증/구독 경로 |
+|---|---|
+| Grok | OAuth |
+| GPT / Codex | OAuth |
+| Ollama | Ollama Pro |
+| GLM (Z.AI) | Coding Plan |
+
+이 목록은 현재 테스트를 완료한 경로이며 전체 provider 호환성 목록을 의미하지
+않습니다. 활성 모델과 인증 방식, provider가 제공하는 사용 제한 정보는 TUI의
+`/usage`에서 확인할 수 있습니다.
+
 ## 설치
 
 릴리스 페이지에서 원하는 바이너리와 `SHA256SUMS`를 받은 뒤 무결성을 확인합니다.
@@ -56,6 +71,51 @@ CLI 옵션 > <현재 디렉터리>/.jikji/jikjicode.yaml > ~/.jikji/jikjicode.ya
 
 프로젝트 설정은 상위 디렉터리를 탐색하지 않으며 provider, credential, env 파일을
 바꿀 수 없습니다.
+
+### 임시 보호 기능 우회
+
+파일 권한이나 host 명령 실행이 OS sandbox에 막혀 작업을 진행할 수 없을 때는
+`/config`의 `sandbox_flip`을 `off`로 설정할 수 있습니다. 명령으로 직접 적용하려면
+다음과 같이 실행합니다.
+
+```text
+/config sandbox-flip off session
+```
+
+활성화되면 `/config`에는 다음과 비슷하게 표시됩니다.
+
+```text
+redaction             ‹ OFF — bypassed (session (until /new, /fork, or exit)) ›
+shell_sandbox         ‹ bubblewrap → none (flipped: session (until /new, /fork, or exit)) ›
+sandbox_flip          ‹ OFF — sandbox flipped off (session (until /new, /fork, or exit)) ›
+```
+
+`sandbox_flip`은 `shell.run`과 새로 시작하는 PTY의 OS 격리를 해제하므로, 명령이
+호스트의 실제 HOME, `/run`, `docker.sock` 등에 접근할 수 있습니다. 이미 실행 중인
+PTY의 격리 상태는 바뀌지 않습니다. Docker나 host daemon 접근만 필요하다면 sandbox를
+완전히 끄기 전에 `/config shell-sandbox native` 사용을 우선 검토하십시오.
+
+IP 주소 등 PII 탐지로 인해 모델에 전달되어야 할 도구 입력이나 출력이 마스킹되는
+경우에는 `/config`의 `redaction`을 `off`로 설정할 수 있습니다.
+
+```text
+/config redaction off session
+```
+
+이 설정은 모델과 provider로 전달되는 로컬 도구 입출력의 PII 마스킹을 임시로
+우회합니다. 화면의 영속 증거, audit log와 spill 데이터의 redaction은 계속
+적용됩니다.
+
+두 설정 모두 현재 세션에서만 유효하며 설정 파일에 영구 저장되지 않습니다.
+`/new`, `/fork`, 프로그램 종료 또는 지정한 범위가 끝나면 자동으로 원래 보호
+설정으로 복귀합니다. 즉, 문제 해결을 위해 일부 보호·권한 경계를 임시로 우회하는
+기능이지 권한 시스템을 영구적으로 끄는 설정이 아닙니다. 즉시 복구하려면 다음을
+사용합니다.
+
+```text
+/config sandbox-flip on
+/config redaction on
+```
 
 ## 주요 실행 명령
 
