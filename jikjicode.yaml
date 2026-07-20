@@ -1,4 +1,4 @@
-# Jikjicode 2026-07-20 pre-test example.
+# Jikjicode 2026-07-20-snapshot-p1 pre-test example.
 # API 키 값은 넣지 말고 환경 변수 이름만 지정하십시오.
 runtime:
   name: jikjicode

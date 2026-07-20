@@ -4,7 +4,7 @@
 현재 배포본은 **정식 릴리스가 아니며 프로덕션 사용을 보장하지 않습니다.**
 소스 코드는 이 저장소에 포함하지 않습니다.
 
-## 2026-07-20 스냅샷
+## 2026-07-20-snapshot-p1
 
 지원 환경은 Linux x86-64(amd64)입니다.
 
@@ -26,12 +26,29 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 |---|---|
 | Grok | OAuth |
 | GPT / Codex | OAuth |
-| Ollama | Ollama Pro |
+| Ollama | Ollama Pro / Cloud |
 | GLM (Z.AI) | Coding Plan |
 
 이 목록은 현재 테스트를 완료한 경로이며 전체 provider 호환성 목록을 의미하지
 않습니다. 활성 모델과 인증 방식, provider가 제공하는 사용 제한 정보는 TUI의
 `/usage`에서 확인할 수 있습니다.
+
+### p1 주요 변경
+
+- provider turn identity와 도구 실행 경계가 어긋났을 때 실행을 중단하는 대신,
+  안전하게 수정 가능한 오류를 모델에 돌려주어 다음 동작에서 스스로 교정할 수
+  있도록 복구 루프를 보강했습니다.
+- 잘못 조립된 도구 이름과 provider 대기 호출을 실행 전에 감지하고 제한적으로
+  재시도합니다. 병렬 도구 묶음은 하나라도 승인되지 않으면 일부만 실행되지
+  않도록 원자성을 유지합니다.
+- 실행 중인 Agent와 task graph를 Galley의 영속 상태에서 자동 탐색하여 TUI fleet
+  영역에 표시합니다. 재시작과 `/resume` 뒤에도 상태를 다시 구성합니다.
+- 사용자에게 표시되는 오류에 `trace_id`를 부여합니다. `/search <trace_id>`로
+  관련 기록을 찾고, `/tracepoint [메모]`로 현재 세션 위치를 수동 기록할 수
+  있습니다.
+
+자동 복구는 실행 전이며 부작용이 없다고 확인되는 경계에서만 동작합니다. 이미
+실행된 변경 작업이나 승인·보안 경계를 임의로 다시 실행하지 않습니다.
 
 ## 설치
 
@@ -184,7 +201,7 @@ Jikjicode는 터미널 mouse reporting을 활성화하지 않으므로 일반적
 | 설정 | `/config`, `/model`, `/effort`, `/tool` |
 | Plan/작업 | `/plan`, `/todo`, `/taskgraph`, `/goal` |
 | 오케스트레이션 | `/autoresearch`, `/ensemble`, `/oracle` |
-| 세션 | `/new`, `/fork`, `/save`, `/rename`, `/sessions`, `/resume`, `/search` |
+| 세션 | `/new`, `/fork`, `/save`, `/rename`, `/sessions`, `/resume`, `/search`, `/tracepoint` |
 | 컨텍스트 | `/rewind`, `/compact`, `/clear` |
 | Agent/실행 관리 | `/agents`, `/ps`, `/stop`, `/schedule` |
 | 프로젝트 | `/diff`, `/init`, `/soul` |
@@ -206,6 +223,17 @@ turn을 보관한 다음 provider에 전달되는 대화를 압축합니다.
 포함하지 않습니다. 다른 머신으로 함께 옮기려면 동일한 Galley 저장소를 별도로
 이전하거나 공유 Galley DSN을 사용해야 합니다.
 
+오류가 표시되면 함께 출력되는 `trace_id`를 문제 보고에 포함하십시오. 같은 세션의
+기록은 `/search trc_...`로 찾을 수 있으며 `/resume` 후에도 유지됩니다. 오류가
+발생하지 않았지만 특정 실행 지점을 남겨야 할 때는 다음과 같이 기록합니다.
+
+```text
+/tracepoint provider 응답 대기 직전
+```
+
+Tracepoint에는 세션, turn, step, 모델, 컨텍스트 사용량과 가능한 경우 원격 run ID가
+저장됩니다. API 키, OAuth 토큰과 도구 입력 전문은 trace ID 자체에 포함되지 않습니다.
+
 ## 라이선스와 대응 소스
 
 이 스냅샷은 별도의 서면 Apache-2.0 허가를 받은 수령인이 아니라면
@@ -213,10 +241,9 @@ GPL-3.0-only 조건으로 배포됩니다. 전체 조건은 [`LICENSE`](./LICENS
 [`LICENSING.md`](./LICENSING.md)를 확인하십시오. 별도 Apache-2.0 허가는
 [Jikji Labs 연락처](https://jikji-labs.com/contact.html)를 통해 요청할 수 있습니다.
 
-이 바이너리의 정확한 대응 소스는 Jikji commit
-[`73db2dbb19f711deb904a7f259cdbf271054e479`](https://github.com/jikji-labs/jikji/commit/73db2dbb19f711deb904a7f259cdbf271054e479)
-입니다. 현재 원본 저장소 접근 권한이 없는 수령인을 위한 GPL 대응 소스 제공 방법과
-유효 기간은 [`SOURCE_OFFER.md`](./SOURCE_OFFER.md)에 명시되어 있습니다.
+각 바이너리에 내장된 정확한 Jikji 소스 commit은 `jikjicode version`에서 확인할 수
+있습니다. 현재 원본 저장소 접근 권한이 없는 수령인을 위한 GPL 대응 소스 제공
+방법과 유효 기간은 [`SOURCE_OFFER.md`](./SOURCE_OFFER.md)에 명시되어 있습니다.
 
 ## 문제 보고
 
@@ -227,6 +254,7 @@ GPL-3.0-only 조건으로 배포됩니다. 전체 조건은 [`LICENSE`](./LICENS
 /version
 /status
 /context
+오류에 표시된 trace_id
 재현 단계와 기대 동작
 ```
 
