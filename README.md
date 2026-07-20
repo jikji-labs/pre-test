@@ -11,8 +11,11 @@
 | 파일 | 구성 |
 |---|---|
 | `jikjicode-linux-amd64` | 일반 정적 바이너리 |
-| `jikjicode-full-linux-amd64` | DuckDB 분석 엔진을 포함한 확장 정적 바이너리 |
+| `jikjicode-full-linux-amd64` | DuckDB 분석 엔진을 포함한 확장 바이너리 |
 | `SHA256SUMS` | 배포 파일 SHA-256 체크섬 |
+| `SHA256SUMS.sig` | 고정된 pre-test 서명키로 생성한 체크섬 분리 서명 |
+| `release-signing-public.pem` | 감사와 수동 검증을 위한 공개키 사본 |
+| `release-metadata.json` | 서명된 저장소·태그·버전·소스 commit 결속 정보 |
 
 Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CPython은 아직 포함하지
 않습니다. Python 도구는 시스템에 `python3`가 설치된 경우 두 바이너리 모두 외부
@@ -53,7 +56,9 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 - 터미널 실행은 24시간마다 GitHub prerelease를 비동기로 확인하고 새 버전만
   알립니다. 자동 설치하지 않으며 `jikjicode update`를 명시해야 합니다.
 - 업데이트는 현재 standard/full 빌드 종류와 OS/architecture가 일치하는 자산만
-  선택하고, 크기 제한과 `SHA256SUMS` 검증 후 같은 디렉터리에서 원자 교체합니다.
+  선택합니다. 바이너리에 고정된 RSA 공개키와 지문, `SHA256SUMS.sig`, GitHub
+  asset digest, 파일 SHA-256이 모두 일치할 때만 같은 디렉터리에서 원자
+  교체합니다.
 
 - provider turn identity와 도구 실행 경계가 어긋났을 때 실행을 중단하는 대신,
   안전하게 수정 가능한 오류를 모델에 돌려주어 다음 동작에서 스스로 교정할 수
@@ -72,9 +77,18 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 
 ## 설치
 
-릴리스 페이지에서 원하는 바이너리와 `SHA256SUMS`를 받은 뒤 무결성을 확인합니다.
+릴리스 페이지에서 원하는 바이너리, `SHA256SUMS`, `SHA256SUMS.sig`,
+`release-signing-public.pem`을 받은 뒤 공개키와 서명을 먼저 확인합니다.
 
 ```bash
+EXPECTED_KEY_SHA256="9abbd05af7aa4f88d71aa3833de3731d8f1fabd253ccf42cd8cc39bbf10933a4"
+OBSERVED_KEY_SHA256="$(
+  openssl pkey -pubin -in release-signing-public.pem -outform DER |
+    sha256sum | awk '{print $1}'
+)"
+test "$OBSERVED_KEY_SHA256" = "$EXPECTED_KEY_SHA256"
+openssl dgst -sha256 -verify release-signing-public.pem \
+  -signature SHA256SUMS.sig SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
 install -m 0755 jikjicode-linux-amd64 ~/.local/bin/jikjicode
 jikjicode version
@@ -178,7 +192,8 @@ jikjicode update
 ```
 
 업데이트 확인은 오프라인 기동을 막지 않으며 실패 시 조용히 다음 기회로
-넘어갑니다. air-gapped 또는 중앙 배포 환경에서는
+넘어갑니다. 설치는 명시적인 명령에서만 수행되고, 서명이 없거나 개발용 버전인
+현재 바이너리는 자동으로 교체하지 않습니다. air-gapped 또는 중앙 배포 환경에서는
 `JIKJICODE_NO_UPDATE_CHECK=1`로 백그라운드 확인을 끌 수 있습니다. 명시적인
 `jikjicode update` 명령은 계속 사용할 수 있습니다.
 

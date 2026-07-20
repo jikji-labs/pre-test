@@ -1,6 +1,8 @@
 # 2026-07-20-snapshot-p5
 
 이 릴리스는 정식 제품 릴리스가 아닌 Linux amd64 사전 테스트 스냅샷입니다.
+대응 소스 commit은
+`134ec6fe693c1a9fa1bf536c0c6918d9b9d7bea5`입니다.
 
 ## 기동 및 작업공간
 
@@ -37,8 +39,15 @@
 - 대화형 터미널은 최대 24시간에 한 번, 최대 5초의 비동기 확인을 수행합니다.
   오프라인 오류는 기동을 막지 않으며 자동으로 바이너리를 설치하지 않습니다.
 - 현재 standard/full flavor와 OS/architecture가 일치하는 자산만 선택합니다.
-- `SHA256SUMS`를 엄격하게 파싱하고 declared/streamed 크기 제한과 SHA-256 검증을
-  통과한 파일만 동기화 후 원자 교체합니다.
+- 바이너리에 pre-test RSA 공개키와 SPKI SHA-256 지문을 고정했습니다.
+  `SHA256SUMS.sig`, 릴리스 공개키 사본, GitHub asset digest와 파일 SHA-256이
+  모두 일치한 파일만 동기화 후 원자 교체합니다.
+- 서명된 `release-metadata.json`이 저장소, 태그, 버전과 대응 소스 commit을
+  결속하여 과거의 정상 서명 번들을 더 높은 가짜 버전으로 재생할 수 없게 합니다.
+- GitHub API와 다운로드 URL의 HTTPS/host/redirect 경계를 검증하고 인증 토큰을
+  교차 호스트로 전달하지 않습니다.
+- prerelease는 게시 시각이 아니라 버전을 우선해 선택하며, `dev`, `local`,
+  `dirty` 빌드는 `--force` 없이는 설치 대상으로 사용하지 않습니다.
 - `JIKJICODE_NO_UPDATE_CHECK=1`은 백그라운드 확인만 비활성화합니다.
 
 ## 검증
@@ -55,6 +64,8 @@
 - `jikjicode-linux-amd64`: 일반 정적 빌드
 - `jikjicode-full-linux-amd64`: DuckDB 포함 확장 빌드
 - `SHA256SUMS`: 배포 파일 무결성 확인
+- `SHA256SUMS.sig`, `release-signing-public.pem`: 배포 체크섬 인증
+- `release-metadata.json`: 릴리스 identity와 대응 소스 결속
 - `LICENSE`, `LICENSING.md`, `SOURCE_OFFER.md`: 라이선스 및 대응 소스 안내
 
 Full 빌드는 내장 CPython을 포함하지 않습니다.
