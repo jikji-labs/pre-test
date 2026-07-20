@@ -1,6 +1,6 @@
 # GPL 대응 소스 서면 제공 제안
 
-Jikji Labs는 `2026-07-20-snapshot-p1`으로 배포한 다음 바이너리에 대해 GNU General
+Jikji Labs는 `2026-07-20-snapshot-p5`로 배포한 다음 바이너리에 대해 GNU General
 Public License version 3 section 6(b)에 따른 대응 소스 제공을 서면으로 제안합니다.
 
 - `jikjicode-linux-amd64`

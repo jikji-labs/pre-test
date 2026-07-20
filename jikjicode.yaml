@@ -1,4 +1,4 @@
-# Jikjicode 2026-07-20-snapshot-p1 pre-test example.
+# Jikjicode 2026-07-20-snapshot-p5 pre-test example.
 # API 키 값은 넣지 말고 환경 변수 이름만 지정하십시오.
 runtime:
   name: jikjicode
@@ -11,6 +11,8 @@ jikjicode:
   shell_sandbox: bubblewrap
   theme: dark
   approval: on-request
+  # extension.sql의 선택적 heuristic overlay. false여도 고정 SQL 안전 경계는 유지됩니다.
+  sqlguard: false
   subagent_tools: inherit
   tool_profile: full
   compatibility_mode: claude-code
@@ -65,3 +67,24 @@ typebackbone:
       thinking_mode: reasoning_effort
       reasoning_efforts: [none, low, medium, high, max]
       default_reasoning_effort: high
+
+# Full 바이너리에서만 활성화하십시오. 실제 DSN은 아래 이름의 환경 변수에 둡니다.
+sorts:
+  duckdb:
+    enabled: false
+    connectors:
+      - name: warehouse
+        type: postgresql
+        dsn_env: JIKJI_WAREHOUSE_POSTGRES_DSN
+        schema: public
+        access_mode: read_only
+        tenants:
+          default: deny
+          allow: [local]
+      - name: orders
+        type: mysql
+        dsn_env: JIKJI_ORDERS_MYSQL_DSN
+        access_mode: read_write
+        tenants:
+          default: deny
+          allow: [local]

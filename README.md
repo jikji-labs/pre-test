@@ -4,7 +4,7 @@
 현재 배포본은 **정식 릴리스가 아니며 프로덕션 사용을 보장하지 않습니다.**
 소스 코드는 이 저장소에 포함하지 않습니다.
 
-## 2026-07-20-snapshot-p1
+## 2026-07-20-snapshot-p5
 
 지원 환경은 Linux x86-64(amd64)입니다.
 
@@ -33,7 +33,23 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 않습니다. 활성 모델과 인증 방식, provider가 제공하는 사용 제한 정보는 TUI의
 `/usage`에서 확인할 수 있습니다.
 
-### p1 주요 변경
+### p5 주요 변경
+
+- 심볼릭 링크로 연결된 작업 디렉터리를 시작 시 안전하게 실제 디렉터리로
+  고정합니다. private tool output buffer의 링크 우회 방지는 유지하면서
+  `~/ontology -> /docker/ontology` 같은 구성이 정상적으로 시작됩니다.
+- 비 Git 디렉터리에서도 대화형 `jikjicode`를 시작할 수 있습니다. positional
+  goal과 `jikjicode exec`의 headless 실행은 기존 Git 저장소 검사를 유지합니다.
+- MCP server 연결과 해제를 직렬화하고 `/config`의 enable/disable 동작을
+  비동기로 처리하여 TUI 정지와 중복 연결을 방지합니다.
+- ontology graph/provenance 상태를 원자적으로 갱신하고 `/status`에 graph,
+  tuple, 메모리 및 embedding cache 사용량을 일관된 snapshot으로 표시합니다.
+- Full 바이너리는 tenant allowlist와 read-only/read-write 모드를 갖춘 DuckDB
+  PostgreSQL/MySQL connector를 지원합니다. DSN 값은 YAML이 아니라 환경 변수로만
+  전달합니다.
+- `/duckdb`에서 connector 상태를 확인할 수 있으며, `/config sqlguard`의
+  선택적 heuristic filter는 로컬 기본값이 `off`입니다. SELECT-only 검증,
+  tenant scoping, stacked statement 차단과 DuckDB sandbox는 항상 유지됩니다.
 
 - provider turn identity와 도구 실행 경계가 어긋났을 때 실행을 중단하는 대신,
   안전하게 수정 가능한 오류를 모델에 돌려주어 다음 동작에서 스스로 교정할 수
@@ -62,6 +78,14 @@ jikjicode version
 
 Full 바이너리를 설치하려면 두 번째 줄의 파일명을
 `jikjicode-full-linux-amd64`로 바꿉니다.
+
+심볼릭 링크 또는 비 Git 데이터 디렉터리에서도 대화형 모드는 그대로 시작합니다.
+자동화된 one-shot 실행은 Git 저장소가 아니면 명시적으로 승인해야 합니다.
+
+```bash
+jikjicode                              # 비 Git 디렉터리의 대화형 세션
+jikjicode --skip-git-repo-check "점검" # 비 Git 디렉터리의 one-shot 실행
+```
 
 ## 최초 설정
 
