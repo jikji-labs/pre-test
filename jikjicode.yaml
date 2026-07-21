@@ -1,4 +1,4 @@
-# Jikjicode 2026-07-20-snapshot-p5 pre-test example.
+# Jikjicode 2026-07-22-snapshot pre-test example.
 # API 키 값은 넣지 말고 환경 변수 이름만 지정하십시오.
 runtime:
   name: jikjicode
@@ -19,6 +19,10 @@ jikjicode:
   max_concurrent_agent: 4
   max_depth_agent: 8
   max_steps: 1024
+  # 0은 agent turn 전체 시간을 제한하지 않습니다. provider idle/tool timeout은 별도입니다.
+  turn_timeout: 0s
+  # Plan 종료 제안을 별도 전환 승인 없이 적용합니다. 실행 도구 권한은 계속 검사합니다.
+  auto_planmode: false
   stream: true
   parallel_tools: true
   rate_limit_resume: park

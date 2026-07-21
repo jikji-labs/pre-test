@@ -1,8 +1,39 @@
-# 2026-07-20-snapshot-p5
+# 2026-07-22-snapshot
 
 이 릴리스는 정식 제품 릴리스가 아닌 Linux amd64 사전 테스트 스냅샷입니다.
 대응 소스 commit은
-`134ec6fe693c1a9fa1bf536c0c6918d9b9d7bea5`입니다.
+`017fd7331749ee0dfa0587119de71e38343b1e7a`입니다.
+
+## Provider replay와 장시간 실행
+
+- Codex Responses의 provider-owned replay state를 로컬, 서버, streaming 및
+  `/resume` 경로에서 보존합니다.
+- replay state가 없는 오래된 tool history와 다른 provider/model의 state는 원문
+  인자·결과 없이 제한된 durable summary로 변환하여 변경 도구의 중복 실행을
+  방지합니다.
+- 인증, 설정, 프로토콜 오류는 즉시 반환하고 전송 전 실패나 명확한 transient
+  오류만 제한적으로 재시도합니다.
+- interactive turn은 기본적으로 전체 시간 제한이 없습니다. `turn_timeout` 또는
+  `--timeout`을 지정할 수 있으며 first-event/read-idle/tool timeout은 독립적으로
+  적용됩니다.
+
+## Durable orchestration과 Skill optimization
+
+- SQLite `BUSY_SNAPSHOT` 발생 시 dispatch 상태 전이의 전체 read/CAS/write
+  transaction을 bounded backoff로 다시 수행합니다.
+- Lua workflow와 Galley schema 30을 사용하는 `skill.optimize`를 추가했습니다.
+  실행, phase, 후보, 평가 및 evidence를 재시작 후에도 복구할 수 있습니다.
+- 실제 optimizer/evaluator와 검증 suite가 배선되지 않은 환경에서는 promotion을
+  성공으로 가장하지 않고 fail closed로 종료합니다.
+- child agent가 별도 모델을 지정하지 않으면 현재 활성 모델을 상속합니다.
+
+## Provider와 설정
+
+- Qwen Token Plan provider, reasoning effort 설정 및 streaming usage 수집을
+  지원합니다.
+- 외부 OAuth credential 파일 변경을 감지해 Codex와 Grok credential을 안전하게
+  다시 로드합니다.
+- `/config auto_planmode`와 `turn_timeout` 설정을 추가했습니다.
 
 ## 기동 및 작업공간
 

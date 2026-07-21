@@ -4,7 +4,7 @@
 현재 배포본은 **정식 릴리스가 아니며 프로덕션 사용을 보장하지 않습니다.**
 소스 코드는 이 저장소에 포함하지 않습니다.
 
-## 2026-07-20-snapshot-p5
+## 2026-07-22-snapshot
 
 지원 환경은 Linux x86-64(amd64)입니다.
 
@@ -36,7 +36,30 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 않습니다. 활성 모델과 인증 방식, provider가 제공하는 사용 제한 정보는 TUI의
 `/usage`에서 확인할 수 있습니다.
 
-### p5 주요 변경
+### 이번 스냅샷 주요 변경
+
+- Codex Responses 세션의 도구 호출 replay state를 로컬·서버·resume 경로에서
+  보존합니다. 오래된 세션에 replay state가 없거나 provider/model이 바뀐 경우에는
+  원문 인자와 결과를 재노출하지 않는 제한된 durable summary를 사용해 변경 도구의
+  중복 실행을 방지합니다.
+- 인증·설정·프로토콜 오류는 재시도하지 않고 즉시 반환합니다. 전송 전 실패 또는
+  명확한 transient 오류만 제한적으로 재시도합니다.
+- interactive agent turn의 기본 전체 시간 제한을 해제했습니다. 첫 event 대기와
+  stream idle, 개별 도구 제한은 독립적으로 유지되며 `turn_timeout`과 `--timeout`으로
+  명시적인 전체 제한을 설정할 수 있습니다.
+- SQLite `BUSY_SNAPSHOT`이 발생하면 dispatch 상태 전이의 전체 read/CAS/write
+  transaction을 현재 상태에서 다시 수행합니다.
+- Lua와 Galley를 기반으로 하는 `skill.optimize` durable workflow를 추가했습니다.
+  후보, 평가, phase 및 evidence를 재시작 후에도 이어가며 권한 있는 evaluator와
+  검증 suite가 없으면 promotion 단계는 fail closed로 유지됩니다.
+- Qwen Token Plan provider와 stream usage 수집, OAuth credential file hot reload,
+  child agent의 활성 모델 상속을 지원합니다.
+- `/config auto_planmode`와 `turn_timeout`을 설정할 수 있습니다. 장시간 reasoning은
+  provider idle 정책과 turn 전체 제한을 분리해 운영할 수 있습니다.
+- 대형 runtime/config/TUI/session 파일을 책임별 파일로 분해하고 전체 소스·문서·API
+  경계 검증을 갱신했습니다.
+
+### 기존 사전 테스트 기능
 
 - 심볼릭 링크로 연결된 작업 디렉터리를 시작 시 안전하게 실제 디렉터리로
   고정합니다. private tool output buffer의 링크 우회 방지는 유지하면서
