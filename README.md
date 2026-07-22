@@ -4,14 +4,15 @@
 현재 배포본은 **정식 릴리스가 아니며 프로덕션 사용을 보장하지 않습니다.**
 소스 코드는 이 저장소에 포함하지 않습니다.
 
-## 2026-07-22-snapshot
+## 2026-07-22-snapshot-p1
 
-지원 환경은 Linux x86-64(amd64)입니다.
+지원 환경은 Linux x86-64(amd64)와 macOS Apple Silicon(arm64)입니다.
 
 | 파일 | 구성 |
 |---|---|
 | `jikjicode-linux-amd64` | 일반 정적 바이너리 |
 | `jikjicode-full-linux-amd64` | DuckDB 분석 엔진을 포함한 확장 바이너리 |
+| `jikjicode-darwin-arm64` | macOS Apple Silicon 일반 바이너리 |
 | `SHA256SUMS` | 배포 파일 SHA-256 체크섬 |
 | `SHA256SUMS.sig` | 고정된 pre-test 서명키로 생성한 체크섬 분리 서명 |
 | `release-signing-public.pem` | 감사와 수동 검증을 위한 공개키 사본 |
@@ -36,7 +37,20 @@ Full 바이너리는 이번 스냅샷에서 DuckDB를 포함합니다. 내장 CP
 않습니다. 활성 모델과 인증 방식, provider가 제공하는 사용 제한 정보는 TUI의
 `/usage`에서 확인할 수 있습니다.
 
-### 이번 스냅샷 주요 변경
+### p1 주요 변경
+
+- `/config redaction off`의 temporal 정책이 로컬 및 원격 실행의 Agent,
+  taskgraph, 중첩 에이전트와 durable park/resume 경로에 상속됩니다.
+- 원격 bypass는 Jikji 서버에서 `operator:write` RBAC을 확인하고 최대 8시간으로
+  제한합니다. 모델이 capability나 만료 시간을 지정할 수 없습니다.
+- 재시작 시 기본 redaction은 ON이며, 이미 승인된 cursor-zero 실행의 정확한
+  재전송 계약만 해당 실행에 한정해 보존합니다.
+- Codex Responses의 잘못 조립된 tool name은 사용자 출력 전에 한 번의 bounded
+  rewind로 복구하고, 이름을 추측하거나 이미 공개된 작업을 재실행하지 않습니다.
+- RemoteRunner, Press, Forme의 정책 코드를 전용 모듈로 분리하고 전체 검증, race,
+  DuckDB 태그 회귀 및 공개 소스 shadow 검증을 통과했습니다.
+
+### 기반 스냅샷 주요 기능
 
 - Codex Responses 세션의 도구 호출 replay state를 로컬·서버·resume 경로에서
   보존합니다. 오래된 세션에 replay state가 없거나 provider/model이 바뀐 경우에는
@@ -119,6 +133,11 @@ jikjicode version
 
 Full 바이너리를 설치하려면 두 번째 줄의 파일명을
 `jikjicode-full-linux-amd64`로 바꿉니다.
+
+macOS Apple Silicon에서는 `jikjicode-darwin-arm64`를 내려받아 같은 서명과
+체크섬을 확인한 뒤 설치합니다. 최초 실행 시 macOS의 다운로드 격리 속성으로
+차단되면 릴리스 서명과 체크섬을 확인한 후 해당 파일의 quarantine 속성을
+제거해야 할 수 있습니다.
 
 심볼릭 링크 또는 비 Git 데이터 디렉터리에서도 대화형 모드는 그대로 시작합니다.
 자동화된 one-shot 실행은 Git 저장소가 아니면 명시적으로 승인해야 합니다.
